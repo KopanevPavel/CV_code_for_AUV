@@ -32,17 +32,16 @@ cv::Point2f MatDescriptorFrontCamera::getCenter() {
     if (!mat)
         return cv::Point2f(0.0, 0.0);
     /// Moments
-    /*
+/*
     /// Get the moment
     cv::Moments mu;
     mu = moments(contour[0], false);
 
     /// Get the mass center:
     return cv::Point2f(mu.m10/mu.m00, mu.m01/mu.m00);
-    */
+*/
 
     cv::Point2f center_of_rect = (cv::boundingRect(contour[0]).br() + cv::boundingRect(contour[0]).tl())*0.5;
-
     return center_of_rect;
 
     // https://docs.opencv.org/2.4/doc/tutorials/imgproc/shapedescriptors/moments/moments.html - for several contours

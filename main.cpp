@@ -22,8 +22,9 @@ int main() {
     for (;;) {
 
     //std::string imagefile = "Images/blue.jpg";
-    std::string imagefile = "/home/pavel/CLionProjects/Vision/Images/red.jpg";
+    std::string imagefile = "/home/pavel/CLionProjects/Vision/Images/horizontal.jpg";
     cv::Mat src = cv::imread(imagefile);
+    cv::resize(src, src, cv::Size(), 0.75, 0.75);
 
     //cv::VideoCapture cap(0); /// Open the default camera
     //if(!cap.isOpened())  /// Check if we succeeded
@@ -47,7 +48,6 @@ int main() {
 
         image_copy_FF = image_copy;
         image_copy_BF = image_copy;
-        
 
         MatDescriptorFrontCamera front_image = detector_frontCamera.detect(image_copy, image_copy_FF, contours);
         MatDescriptorBottomCamera bottom_image = detector_bottomCamera.detect(image_copy, image_copy_BF);
@@ -70,7 +70,7 @@ int main() {
             cv::Point2f center = front_image.getCenter();
             cv::circle(image_copy_descriptor_front, center, 3, cv::Scalar(0, 0, 255));
             center = convertToCentralCoordinates(center, src.cols, src.rows);
-            std::cout<<center<<" THIS IS MAIN"<<std::endl;
+            //std::cout<<center<<" THIS IS MAIN"<<std::endl;
 
             color = cv::Scalar(255, 255, 0);
             cv::rectangle(image_copy_descriptor_front, front_image.getBoundingRect().tl(), front_image.getBoundingRect().br(), color, 2, 8, 0);
@@ -103,10 +103,6 @@ int main() {
                 bottom_image.getHorizontalLines()[i][3] =
                         ((float) v[1] - v[3]) / (v[0] - v[2]) * (src.cols - v[2]) + v[3];
                 cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
-                cv::line(drawing,
-                         cv::Point(bottom_image.getHorizontalLines()[i][0], bottom_image.getHorizontalLines()[i][1]),
-                         cv::Point(bottom_image.getHorizontalLines()[i][2], bottom_image.getHorizontalLines()[i][3]),
-                         color, 2, CV_AA);
                 cv::line(image_copy_descriptor_bottom,
                          cv::Point(bottom_image.getHorizontalLines()[i][0], bottom_image.getHorizontalLines()[i][1]),
                          cv::Point(bottom_image.getHorizontalLines()[i][2], bottom_image.getHorizontalLines()[i][3]),
@@ -114,13 +110,9 @@ int main() {
 
                 std::cout<<bottom_image.getIntersectionWithHorizontal(src, bottom_image.getHorizontalLines()[i])<<" Intersection Y"<<std::endl;
             }
-
-            cv::namedWindow("Horizontal Lines EXP");
-            if (!drawing.empty()) cv::imshow("Horizontal Lines EXP", drawing);
-
-            drawing = cv::Mat::zeros(src.size(), CV_8UC3); /// Black
-
         }
+        drawing = cv::Mat::zeros(src.size(), CV_8UC3); /// Black
+
         if (bottom_image.hasVerticalLines()) {
 
             /// Draw the lines
@@ -144,37 +136,23 @@ int main() {
                 bottom_image.getVerticalLines()[i][3] =
                         ((float) v[1] - v[3]) / (v[0] - v[2]) * (src.cols - v[2]) + v[3];
                 cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
-                cv::line(drawing,
-                         cv::Point(bottom_image.getVerticalLines()[i][0], bottom_image.getVerticalLines()[i][1]),
-                         cv::Point(bottom_image.getVerticalLines()[i][2], bottom_image.getVerticalLines()[i][3]),
-                         color, 2, CV_AA);
                 cv::line(image_copy_descriptor_bottom,
                          cv::Point(bottom_image.getVerticalLines()[i][0], bottom_image.getVerticalLines()[i][1]),
                          cv::Point(bottom_image.getVerticalLines()[i][2], bottom_image.getVerticalLines()[i][3]),
                          color, 2, CV_AA);
+
                 std::cout<<bottom_image.getIntersectionWithVertical(src, bottom_image.getVerticalLines()[i])<<" Intersection X"<<std::endl;
             }
 
-            cv::namedWindow("Vertical Lines EXP");
-            if (!drawing.empty()) cv::imshow("Vertical Lines EXP", drawing);
-
-            cv::namedWindow("Lines EXP");
-            if (!image_copy_descriptor_bottom.empty()) cv::imshow("Lines EXP", image_copy_descriptor_bottom);
-
-            drawing = cv::Mat::zeros(src.size(), CV_8UC3); /// Black
-
+            cv::namedWindow("Lines Expanded");
+            if (!image_copy_descriptor_bottom.empty()) cv::imshow("Lines Expanded", image_copy_descriptor_bottom);
         }
-
-
-
-
-
+        drawing = cv::Mat::zeros(src.size(), CV_8UC3); /// Black
 
         BucketDescriptor image_with_buckets = bucket_detector.detect(src, false);
 
         cv::namedWindow("SRC");
         if (!src.empty()) cv::imshow("SRC", src);
-
 
         cv::Mat image_copy_descriptor_buckets = src;
 
@@ -191,7 +169,7 @@ int main() {
                         cv::circle (image_copy_descriptor_buckets, RedBucketCenter, RedBuckets[i][2], cv::Scalar(255, 0, 0));
 
                         RedBucketCenter = convertToCentralCoordinates(RedBucketCenter, src.cols, src.rows);
-                        std::cout<<RedBucketCenter<<" THIS IS MAIN RED"<<std::endl;
+                        //std::cout<<RedBucketCenter<<" THIS IS MAIN RED"<<std::endl;
                     }
                 }
 
@@ -205,7 +183,7 @@ int main() {
 
                         BlueBucketCenter = convertToCentralCoordinates(BlueBucketCenter, src.cols, src.rows);
 
-                        std::cout<<BlueBucketCenter<<" THIS IS MAIN BlUE"<<std::endl;
+                        //std::cout<<BlueBucketCenter<<" THIS IS MAIN BlUE"<<std::endl;
                     }
                 }
             }
@@ -223,10 +201,9 @@ int main() {
 
                             BlueBucketCenter = convertToCentralCoordinates(BlueBucketCenter, src.cols, src.rows);
 
-                            std::cout << BlueBucketCenter << " THIS IS MAIN BlUE 1" << std::endl;
+                            //std::cout << BlueBucketCenter << " THIS IS MAIN BlUE 1" << std::endl;
                         }
                     }
-
                 }
                 if (image_with_buckets.hasRedBucketCenter()) {
                     std::vector<cv::Vec3f> RedBuckets = image_with_buckets.getAllRedBuckets();
@@ -240,7 +217,7 @@ int main() {
                             cv::circle (image_copy_descriptor_buckets, RedBucketCenter, RedBuckets[i][2], cv::Scalar(255, 0, 0));
 
                             RedBucketCenter = convertToCentralCoordinates(RedBucketCenter, src.cols, src.rows);
-                            std::cout<<RedBucketCenter<<" THIS IS MAIN RED 1"<<std::endl;
+                            //std::cout<<RedBucketCenter<<" THIS IS MAIN RED 1"<<std::endl;
                         }
                     }
                 }

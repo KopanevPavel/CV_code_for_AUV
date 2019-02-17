@@ -385,32 +385,35 @@ BucketDescriptor BucketDetector::detect(const cv::Mat src, bool withPreprocess) 
     else
         image = src;
 
-    std::vector<cv::Vec3f> detectedCircles = findCircles(src, image);
+    if (!src.empty()) {
 
-    int counter_red = 0;
-    int counter_blue = 0;
-    float min_Radius = src.rows/4;
+        std::vector<cv::Vec3f> detectedCircles = findCircles(src, image);
 
-    std::vector<cv::Vec3f> redBuckets (detectedCircles.size());
-    std::vector<cv::Vec3f> blueBuckets (detectedCircles.size());
+        int counter_red = 0;
+        int counter_blue = 0;
+        float min_Radius = src.rows/4;
 
-    if (!detectedCircles.empty()) {
-        for (int i = 0; i < detectedCircles.size(); i++) {
-            if (detectedCircles[i][2] > min_Radius) {
-                if (isRed(image, detectedCircles[i])) {
-                    redBuckets [counter_red] = detectedCircles[i];
-                    counter_red++;
-                }
+        std::vector<cv::Vec3f> redBuckets (detectedCircles.size());
+        std::vector<cv::Vec3f> blueBuckets (detectedCircles.size());
 
-                else if (isBlue(image, detectedCircles[i])) {
-                    blueBuckets [counter_blue] = detectedCircles[i];
-                    counter_blue++;
+        if (!detectedCircles.empty()) {
+            for (int i = 0; i < detectedCircles.size(); i++) {
+                if (detectedCircles[i][2] > min_Radius) {
+                    if (isRed(image, detectedCircles[i])) {
+                        redBuckets [counter_red] = detectedCircles[i];
+                        counter_red++;
+                    }
+
+                    else if (isBlue(image, detectedCircles[i])) {
+                        blueBuckets [counter_blue] = detectedCircles[i];
+                        counter_blue++;
+                    }
                 }
             }
         }
-    }
 
-    if (counter_red + counter_blue == 0) return BucketDescriptor::noBuckets();
-    else return BucketDescriptor::create(redBuckets, blueBuckets);
+        if (counter_red + counter_blue == 0) return BucketDescriptor::noBuckets();
+        else return BucketDescriptor::create(redBuckets, blueBuckets);
+    } else return BucketDescriptor::noBuckets();
 }
 

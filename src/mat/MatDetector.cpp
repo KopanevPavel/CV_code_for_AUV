@@ -47,10 +47,10 @@ void MatDetector::meanShift(const cv::Mat &src, cv::Mat &dst) {
     */
 }
 
-const cv::String window_detection_name = "After Color Filtering";
-
 /// Uncomment this if you want to detect colors using trackbars
 /*
+const cv::String window_detection_name = "After Color Filtering";
+
 const int max_value_H = 360/2;
 const int max_value = 255;
 int low_H = 0, low_S = 0, low_V = 0;
@@ -95,8 +95,9 @@ void createTrackbars_filter() {
 }
 */
 
+/// Uncomment this if you want to apply morphology using trackbars
 static void on_Trackbar(int, void *) {};
-
+/*
 int dilation_size = 0;
 int erosion_size = 0;
 int erosion_elem = 0;
@@ -131,7 +132,10 @@ void createTrackbars_morphology() {
                        on_Trackbar);
 
 }
+*/
 
+/// Uncomment this if you want to use mouse color picker (it finds color range of an object which you clicked at)
+/*
 cv::Mat image_for_color_pick_1;
 cv::Mat image_for_color_pick_2;
 
@@ -150,9 +154,10 @@ void pick_color(int event, int x, int y, int f, void *)
         }
     }
 }
+*/
 
 void CLAHE_correction(const cv::Mat &src, cv::Mat &dst) {
-    /// CLAHE stuff
+
     cv::Mat lab_image;
     cv::cvtColor(src, lab_image, CV_BGR2Lab);
 
@@ -179,7 +184,9 @@ void CLAHE_correction(const cv::Mat &src, cv::Mat &dst) {
 void MatDetector::extractGreenColour(const cv::Mat &src, cv::Mat &dst) {
     cv::blur(src, dst, cv::Size(3,3));
     //cv::GaussianBlur(src, dst, cv::Size(3, 3), 0, 0);
-    //CLAHE_correction(src, dst);
+
+    /// Uncomment this if you want to use CLAHE correction
+    //CLAHE_correction(dst, dst);
 
     cv::Mat hsv;
 
@@ -189,10 +196,8 @@ void MatDetector::extractGreenColour(const cv::Mat &src, cv::Mat &dst) {
     //cv::namedWindow("Filtering src");
     //if (!hsv.empty()) cv::imshow("Filtering src", hsv);
 
-    /// This
-
-
-
+    /// This (using color picker function)
+    /*
     image_for_color_pick_1 = hsv;
 
     cv::namedWindow("Pick Green");
@@ -205,57 +210,29 @@ void MatDetector::extractGreenColour(const cv::Mat &src, cv::Mat &dst) {
     std::cerr << "mean, var (GREEN): " << std::endl;
     std::cerr << m[0] << " " << m[1] << " " << m[2] << " " << v[0] << " " << v[1] << " " << v[2] << std::endl;
 
-    cv::Scalar lower_green(m[0]-v[0], m[1]-v[1], m[2]-v[2]); // Mean - var for low
-    cv::Scalar higher_green(m[0]+v[0], m[1]+v[1], m[2]+v[2]); // Mean + var for high
-
-/*
-    cv::Scalar lower_green(95, 200, 115); /// Mean - var for low
-    cv::Scalar higher_green(100, 255, 180); /// Mean + var for high
-*/
-
-    /**
-    mean, var (GREEN):
-    86.4826 138.854 100.201 4.47133 12.694 16.4764
-
-    mean, var (GREEN):
-    94.9959 244.774 149.44 2.02555 13.3235 34.4567
-
-    mean, var (GREEN):
-    97.7193 250.199 164.643 0.956744 7.89672 20.1528
-
-    mean, var (GREEN):
-    85.4527 110.595 80.7901 3.08535 17.2897 12.3299
-
-    sensitivity = 15;
-    [60 - sensitivity, 100, 50]
-    [60 + sensitivity, 255, 255]
-
-     */
-
-    //cv::Scalar lower_green(m[0]-v[0], m[1]-v[1], m[2]-v[2]); // Mean - var for low
-    //cv::Scalar higher_green(m[0]+v[0], m[1]+v[1], m[2]+v[2]); // Mean + var for high
-
-    /// Or This
-    /*
-    std::array<int, 3> lower_green = {0, 0, 0}; //H_S_V
-    std::array<int, 3> higher_green = {180, 255, 255};
+    cv::Scalar lower_green(m[0]-v[0], m[1]-v[1], m[2]-v[2]); /// Mean - var for low
+    cv::Scalar higher_green(m[0]+v[0], m[1]+v[1], m[2]+v[2]); /// Mean + var for high
     */
 
-    /// Or This
+    cv::Scalar lower_green(78, 95, 0); /// Mean - var for low
+    cv::Scalar higher_green(180, 255, 146); /// Mean + var for high
+
+
+    /// Or This (using trackbars)
     /*
     createTrackbars_filter();
     std::array<int, 3> lower_green = {low_H, low_S, low_V}; //H_S_V
     std::array<int, 3> higher_green = {high_H, high_S, high_V};
-
     */
 
     /// Detect the object based on HSV Range Values
     cv::Mat mask;
     cv::inRange(hsv, lower_green, higher_green, mask);
-    cv::bitwise_and(hsv, hsv, dst, mask = mask);
+    cv::bitwise_and(hsv, hsv, dst, mask = mask); /// dst - image with applied mask
 
     dst = mask;
-    if (!dst.empty()) cv::imshow(window_detection_name, dst);
+    //if (!dst.empty()) cv::imshow(window_detection_name, dst);
+    //if (!dst.empty()) {cv::namedWindow("After Color Filtering"); cv::imshow("After Color Filtering", dst);}
 }
 
 void MatDetector::extractValueChannel(const cv::Mat &src, cv::Mat &dst) {
@@ -263,12 +240,14 @@ void MatDetector::extractValueChannel(const cv::Mat &src, cv::Mat &dst) {
     cv::cvtColor(src, hsv, CV_BGR2HSV);
     std::vector<cv::Mat> hsvChannels;
     cv::split(hsv, hsvChannels);
-    dst = hsvChannels[2]; /// Image hue represented as gray scale
+    dst = hsvChannels[2]; /// Image hue represented as gray scale (a bit noisy)
 }
 
 void MatDetector::morphology(const cv::Mat &src, cv::Mat &dst) {
     cv::Mat element;
 
+    /// Uncomment this if you want to apply morphology (erosion and dilation) using trackbars
+    /*
     createTrackbars_morphology();
 
     int erosion_type;
@@ -284,7 +263,9 @@ void MatDetector::morphology(const cv::Mat &src, cv::Mat &dst) {
     /// Apply the erosion operation
     cv::erode(dst, dst, element);
     if (!dst.empty()) cv::imshow(window_erosion_name, dst);
+    */
 
+    /*
     int dilation_type;
 
     if (dilation_elem == 0) {dilation_type = cv::MORPH_RECT;}
@@ -298,44 +279,61 @@ void MatDetector::morphology(const cv::Mat &src, cv::Mat &dst) {
     /// Apply the dilation operation
     cv::dilate(dst, dst, element);
     if (!dst.empty()) cv::imshow(window_dilation_name, dst);
+    */
+
+    /// Apply the erosion operation
+    int erosion_type = cv::MORPH_RECT;
+    element = cv::getStructuringElement(erosion_type,
+                                        cv::Size(1 + 1, 1 + 1),
+                                        cv::Point(1, 1));
+    cv::erode(dst, dst, element);
+    //if (!dst.empty()) {cv::namedWindow("After Morpholory"); cv::imshow("After Morpholory", dst);}
+
+    /// Apply the dilation operation
+    int dilation_type = cv::MORPH_RECT;
+    element = cv::getStructuringElement(dilation_type,
+                                        cv::Size(2*4 + 1, 2*4 + 1),
+                                        cv::Point(4, 4));
+    cv::dilate(dst, dst, element);
+    //if (!dst.empty()) {cv::namedWindow("After Morpholory"); cv::imshow("After Morpholory", dst);}
+
+    /// Apply morphologyEx
+    int size = 2;
+    element = cv::getStructuringElement(CV_SHAPE_RECT, cv::Size(2*size+1, 2*size+1));
+    cv::morphologyEx(dst, dst, cv::MORPH_CLOSE, element);
+    if (!dst.empty()) {cv::namedWindow("After morphologyEx"); cv::imshow("After morphologyEx", dst);}
 }
 
+/// Uncomment this if you want to use trackbars to adjust canny parameters
+/*
 int lowThreshold;
 int ratio = 3;
 int kernel_size = 3;
 
-const cv::String window_draw_corners_name = "After Canny";
+const cv::String window_draw_contours_name = "After Canny";
 
 void createTrackbars() {
     /// Create trackbars and insert them into window to change H,S,V values
-    cv::namedWindow(window_draw_corners_name);
+    cv::namedWindow(window_draw_contours_name);
 
     /// Trackbars to set Canny function parameters
-    cv::createTrackbar("lowThreshold", window_draw_corners_name, &lowThreshold, 255, on_Trackbar);
-    cv::createTrackbar("Ratio", window_draw_corners_name, &ratio, 15, on_Trackbar);
-    cv::createTrackbar("Kernel Size", window_draw_corners_name, &kernel_size, 10, on_Trackbar);
+    cv::createTrackbar("lowThreshold", window_draw_contours_name, &lowThreshold, 255, on_Trackbar);
+    cv::createTrackbar("Ratio", window_draw_contours_name, &ratio, 15, on_Trackbar);
+    cv::createTrackbar("Kernel Size", window_draw_contours_name, &kernel_size, 10, on_Trackbar);
 }
+*/
 
 void MatDetector::thresholdAndContours(const cv::Mat& src, cv::Mat& dst, std::vector<std::vector<cv::Point>>& contours) {
     //cv::blur(src, dst, cv::Size(3,3));
     std::vector<cv::Vec4i> hierarchy;
 
-    createTrackbars();
+    /// Uncomment this if you want to use trackbars to adjust canny parameters
+    //createTrackbars();
 
-    /// Try to fill
-    int size = 2;
-    cv::Mat element;
-    element = cv::getStructuringElement(CV_SHAPE_RECT, cv::Size(2*size+1, 2*size+1));
-    cv::morphologyEx(dst, dst, cv::MORPH_CLOSE, element);
+    cv::Mat dst_copy;
+    cv::Canny(dst, dst_copy, 1, 1*3, 3);
 
-    if (!dst.empty()) cv::imshow("After morphologyEx", dst);
-
-    cv::Mat dst_C;
-
-    cv::Canny(dst, dst_C, lowThreshold, lowThreshold*ratio, kernel_size);
-    //cv::dilate(dst, dst, cv::Mat(), cv::Point(-1,-1)); /// If needed
-
-    cv::findContours(dst_C, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    cv::findContours(dst_copy, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
     //cv::findContours(dst, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 }
 
@@ -365,7 +363,7 @@ bool MatDetectorFrontCamera::getMatContour(std::vector<std::vector<cv::Point>>& 
     for (int i = 0; i < contours.size(); i++) {cv::convexHull(cv::Mat(contours[i]), hull[i], false);}
 
     /// Draw contours + hull results
-    cv::Mat drawing = cv::Mat::zeros(src.size(), CV_8UC3);
+    cv::Mat drawing = cv::Mat::zeros(src.size(), CV_8UC3); /// Black
     cv::RNG rng;
     for (int i = 0; i < contours.size(); i++) {
         cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255)); /// Random colors
@@ -373,85 +371,81 @@ bool MatDetectorFrontCamera::getMatContour(std::vector<std::vector<cv::Point>>& 
         cv::drawContours(drawing, hull, i, color, 1, 8, std::vector<cv::Vec4i>(), 0, cv::Point());
     }
 
+    /// Leave only convex hulls
     contours = hull;
 
     /// Show in a window
-    if (!drawing.empty()) cv::imshow(window_draw_corners_name, drawing);
+    if (!drawing.empty()) cv::imshow("After Contour detection", drawing);
 
-    int largest_contour_index = 0;
+    // TODO add max possible contour area
+    int largest_contour_index = -1;
     double largest_area = 0;
 
-    /// Approximate contours to polygons + get bounding rects and circles
-    std::vector<std::vector<cv::Point>> contours_poly(contours.size());
-    std::vector<cv::Rect> boundRect(contours.size());
-    std::vector<cv::Point2f> center(contours.size());
-    std::vector<float> radius(contours.size());
+    /// Approximate contours to polygons + get bounding rects (and circles)
+    //std::vector<std::vector<cv::Point>> contours_poly(contours.size());
+    //std::vector<cv::Rect> boundRect(contours.size());
+    //std::vector<cv::Point2f> center(contours.size());
+    //std::vector<float> radius(contours.size());
 
     for (int i = 0; i < contours.size(); i++) {
-        cv::approxPolyDP(cv::Mat(contours[i]), contours_poly[i], 5, true);
+        //cv::approxPolyDP(cv::Mat(contours[i]), contours_poly[i], 5, true);
         //boundRect[i] = boundingRect(cv::Mat(contours_poly[i]));
         //cv::minEnclosingCircle((cv::Mat)contours_poly[i], center[i], radius[i]);
 
         /// Finding biggest contour
-
         double a = cv::contourArea(contours[i],false);           /// Find the area of contour
         if (a > largest_area) {
             largest_area = a;
-            largest_contour_index = i;                                     /// Store the index of largest contour
+            largest_contour_index = i;                           /// Store the index of largest contour
             bounding_rect = cv::boundingRect(contours[i]);       /// Find the bounding rectangle for biggest contour
-            //rot_bounding_rect = cv::minAreaRect(contours[i]);  /// Find the rotated bounding rectangle for biggest contour
         }
     }
 
     drawing = cv::Mat::zeros(src.size(), CV_8UC3);
     cv::Scalar color(255, 100, 255);
+    cv::drawContours(drawing, contours, largest_contour_index, color, 1, 8, std::vector<cv::Vec4i>(), 0); /// Draw the largest contour using previously stored index
 
-    cv::drawContours(drawing, contours, largest_contour_index, color, 1, 8, std::vector<cv::Vec4i>(), 0); // Draw the largest contour using previously stored index
-
-    cv::namedWindow("Biggest Contour FC");
-    if (!drawing.empty()) cv::imshow("Biggest Contour FC", drawing);
-
+    if (!drawing.empty()) {cv::namedWindow("Biggest Contour"); cv::imshow("Biggest Contour", drawing);}
 
     //std::cout<<largest_contour_index<<" - Biggest contour index"<<std::endl;
     //std::cout<<global_contours.size()<<" - Counters amount"<<std::endl;
 
-    /// Draw polygonal contour + bonding rects + circles
-    //cv::RNG rng;
+    /// Draw polygonal contour + bonding rects (+ circles)
     cv::Mat drawing_approx = cv::Mat::zeros(src.size(), CV_8UC3);
-    color = cv::Scalar(110, 150, 200);
-    cv::drawContours(drawing_approx, contours_poly, largest_contour_index, color, 1, 8, std::vector<cv::Vec4i>(), 0, cv::Point() );
-    color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
-    //cv::rectangle(drawing_approx, boundRect[largest_contour_index].tl(), boundRect[largest_contour_index].br(), color, 2, 8, 0 );
-    color = cv::Scalar(110, 100, 255);
-    cv::rectangle(drawing_approx, bounding_rect.tl(), bounding_rect.br(), color, 2, 8, 0 );
-    color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
-    //if (largest_contour_index > 0) cv::circle(drawing_approx, center[largest_contour_index], (int)radius[largest_contour_index], color, 2, 8, 0 );
-    color = cv::Scalar(210, 150, 200);
 
-    cv::namedWindow("After approxPolyDP FC");
-    if (!drawing_approx.empty()) cv::imshow("After approxPolyDP FC", drawing_approx);
+    color = cv::Scalar(110, 150, 200);
+    //if (largest_contour_index != -1) cv::drawContours(drawing_approx, contours_poly, largest_contour_index, color, 1, 8, std::vector<cv::Vec4i>(), 0, cv::Point() );
+
+    color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
+    //if (largest_contour_index != -1) cv::rectangle(drawing_approx, boundRect[largest_contour_index].tl(), boundRect[largest_contour_index].br(), color, 2, 8, 0 );
+
+    color = cv::Scalar(110, 100, 255);
+    if (largest_contour_index != -1) cv::rectangle(drawing_approx, bounding_rect.tl(), bounding_rect.br(), color, 2, 8, 0 );
+
+    color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
+    //if (largest_contour_index != -1) cv::circle(drawing_approx, center[largest_contour_index], (int)radius[largest_contour_index], color, 2, 8, 0 );
+
 
     cv::Point center_of_rect = (bounding_rect.br() + bounding_rect.tl())*0.5;
-    cv::circle(drawing_approx, center_of_rect, 3, cv::Scalar(0,0,255));
+    cv::circle(drawing_approx, center_of_rect, 3, cv::Scalar(0, 0, 255));
 
-    if (!drawing_approx.empty()) cv::imshow("After approxPolyDP FC", drawing_approx);
+    if (!drawing_approx.empty()) {cv::namedWindow("After approxPolyDP"); cv::imshow("After approxPolyDP", drawing_approx);}
 
     //std::cout<<center_of_rect<<" - Centre coordinates"<<std::endl;
 
     if ((center_of_rect.x != 0) || (center_of_rect.y != 0)) {
         cv::Point center_of_rect_CC = convertToCentralCoordinates(center_of_rect, drawing_approx.size().width, drawing_approx.size().height);
-        std::cout<<center_of_rect_CC<<" - Centre coordinates in CC"<<std::endl; //coordinates
+        std::cout<<center_of_rect_CC<<" - Centre coordinates in CC"<<std::endl;
     }
 
-    contours[0] = contours[largest_contour_index];
+    if (largest_contour_index != -1) contours[0] = contours[largest_contour_index];
 
-    std::cout<<largest_area<<" - largest_area"<<std::endl;
+    //std::cout<<largest_area<<" - Largest Area"<<std::endl;
 
     if ((!contours.empty()) && (largest_area > 1000)) {return true;} else {return false;}
 }
 
-int threshold (20), maxLineGap (20), minLineLength (20);
-
+/// Sorting function (sorts elements from small to big in one array's row)
 void insertionSort(std::vector<std::vector<float>>& angle, int row, int low_ind, int high_ind) {
     int i, j;
     float key_0, key_1, key_2;
@@ -467,7 +461,6 @@ void insertionSort(std::vector<std::vector<float>>& angle, int row, int low_ind,
         /** Move elements of arr[0..i-1], that are
         greater than key, to one position ahead
         of their current position */
-
         if (row == 1) {
             while (j >= 0 && angle[1][j] > key_1)
             {
@@ -489,25 +482,29 @@ void insertionSort(std::vector<std::vector<float>>& angle, int row, int low_ind,
                 j = j-1;
             }
         }
-
         angle[0][j+1] = key_0;
         angle[1][j+1] = key_1;
         angle[2][j+1] = key_2;
     }
 }
 
+/// Uncomment this if you want to use trackbars to adjust FastLineDetector parameters
+/*
 int length_threshold = 40;
-int canny_th1 = 50;
-int canny_th2 = 50;
+int canny_th1 = 10;
+int canny_th2 = 10;
 int canny_aperture_size = 3;
+*/
+
+/// Uncomment this if you want to use trackbars to adjust HoughLinesP parameters
+//int threshold (20), maxLineGap (20), minLineLength (20);
 
 void MatDetectorBottomCamera::detectLines(const cv::Mat& image, std::vector<cv::Vec4f>& lines) {
 
     cv::Mat gray = image;
     //cv::cvtColor(gray, gray, CV_BGR2GRAY); /// We use mask
 
-    /// This (Example here https://docs.opencv.org/3.4/d1/d9e/fld_lines_8cpp-example.html#a9)
-
+    /// This (FastLineDetector)(Example here https://docs.opencv.org/3.4/d1/d9e/fld_lines_8cpp-example.html#a9)
     /*
     length_threshold	10 - Segment shorter than this will be discarded
     distance_threshold	1.41421356 - A point placed from a hypothesis line segment farther than this will be regarded as an outlier
@@ -517,16 +514,21 @@ void MatDetectorBottomCamera::detectLines(const cv::Mat& image, std::vector<cv::
     do_merge	false - If true, incremental merging of segments will be perfomred
     */
 
+    /// Uncomment this if you want to use trackbars to adjust FastLineDetector parameters
+    /*
     cv::createTrackbar("length_threshold", "All lines after FastLineDetector", &length_threshold, 500, on_Trackbar);
     cv::createTrackbar("canny_th1", "All lines after FastLineDetector", &canny_th1, 100, on_Trackbar);
     cv::createTrackbar("canny_th2", "All lines after FastLineDetector", &canny_th2, 100, on_Trackbar);
     cv::createTrackbar("canny_aperture_size", "All lines after FastLineDetector", &canny_aperture_size, 20, on_Trackbar);
 
     cv::Ptr<cv::ximgproc::FastLineDetector> detector = cv::ximgproc::createFastLineDetector(length_threshold, 3, canny_th1, canny_th2, canny_aperture_size, false);
+    */
+
+    cv::Ptr<cv::ximgproc::FastLineDetector> detector = cv::ximgproc::createFastLineDetector(60, 6, 50, 50, 3, false);
 
     if (!gray.empty()) detector->detect(gray, lines);
 
-    /// Or this
+    /// Or this (HoughLinesP)
     /*
     cv::createTrackbar("threshold", "All lines after Hough transform", &threshold, 400, on_Trackbar);
     cv::createTrackbar("maxLineGap", "All lines after Hough transform", &maxLineGap, 400, on_Trackbar);
@@ -534,18 +536,16 @@ void MatDetectorBottomCamera::detectLines(const cv::Mat& image, std::vector<cv::
     if (!gray.empty()) { cv::HoughLinesP(gray, lines, 1, CV_PI / 180, threshold, maxLineGap, minLineLength); }
     */
 
-    //cv::imshow("All lines after Hough transform", gray);
-
-    if (lines.size() != 0) std::cout << lines.size() << " - Number of lines" << std::endl;
+    //if (lines.size() != 0) std::cout << lines.size() << " - Number of lines" << std::endl;
 }
 
 int line_number = 100;
 int parallel_criteria = 0;
 
-std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndsortLines(cv::Mat& image, std::vector<cv::Vec4f>& lines) {
+std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndSortLines(cv::Mat& image, std::vector<cv::Vec4f>& lines) {
 
     //cv::namedWindow("All lines after Hough transform");
-    cv::namedWindow("All lines after FastLineDetector");
+    //cv::namedWindow("All lines after FastLineDetector");
     //cv::Mat drawing(image.size(), CV_8UC3, cv::Scalar(255, 255, 255)); /// White
     cv::Mat drawing = cv::Mat::zeros(image.size(), CV_8UC3); /// Black
 
@@ -554,8 +554,8 @@ std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndsortLines(cv::Ma
     for (int i = 0; i < lines.size(); i++) {
         /// Draw the lines
         cv::Vec4f l = lines[i];
-        cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
-        cv::line(drawing, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), color, 2, CV_AA);
+        //cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
+        //cv::line(drawing, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), color, 2, CV_AA);
 
         cv::Vec4i vertical_line(0, 0, 0, 5);
         cv::Vec4i horizontal_line(0, 0, 5, 0);
@@ -581,12 +581,13 @@ std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndsortLines(cv::Ma
         insertionSort(angle, 1, 0, lines.size() - 1); /// Sort slopes (from small to big ones)
     }
 
+    /// Sort coordinate difference between parallel lines (from small to big ones) (for each parallel group)
+    /// Dont't ask me why i did that (i tried to later make new array with no matching lines [e.g. i could exclude lines by comparing their intersections with horizontal/vertical lines])
+    /* In most cases it works but sometimes not (have no idea why). So i desided to comment it for now (to make code more robust)
+
     int counter = 0;
     int parallel_lines_group_counter = 0;
 
-    /// Sort coordinate difference between parallel lines (from small to big ones) (for each parallel group)
-    /// Dont't ask me why i did that
-    /* In most cases works but sometimes not (have no idea why). So i desided to comment it for now
     for (int i = 1; i < lines.size(); i++) {
         if (abs(angle [1][i-1] - angle [1][i]) == parallel_criteria) { /// Tolerance
             counter ++;
@@ -643,6 +644,7 @@ std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndsortLines(cv::Ma
     */
 
     /// Print array
+    /*
     if ((lines.size() < line_number) && (lines.size() > 0)) {
         for (int i = 0; i <= 2; i++) {
             for (int j = 0; j < lines.size(); j++)
@@ -652,18 +654,16 @@ std::vector<std::vector<float>> MatDetectorBottomCamera::drawAndsortLines(cv::Ma
             std::cout<<std::endl;
         }
     }
+    */
 
-    //cv::imshow("All lines after Hough transform", drawing);
-    if (!drawing.empty()) cv::imshow("All lines after FastLineDetector", drawing);
+    //if (!drawing.empty()) cv::imshow("All lines after Hough transform", drawing);
+    //if (!drawing.empty()) cv::imshow("All lines after FastLineDetector", drawing);
 
-    image = drawing;
-
+    //image = drawing;
     return (angle);
 }
 
 std::vector<cv::Vec4f> MatDetectorBottomCamera::findHorizontalLines(const cv::Mat& image, std::vector<std::vector<float>>& angle, std::vector<cv::Vec4f>& lines) {
-
-    //float a = getLineSlope(lines[i]);
 
     float min_angle = 1000;
     int counter_horizontal = 0;
@@ -737,7 +737,7 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findHorizontalLines(const cv::Ma
         }
     }
 
-    std::cout<<counter_horizontal<<"; "<<index_paral<<" - Number of parallel horizontal lines + index"<<std::endl;
+    //std::cout<<counter_horizontal<<"; "<<index_paral<<" - Number of parallel horizontal lines + index"<<std::endl;
 
     std::vector<cv::Vec4f> horizontal_lines(counter_horizontal);
 
@@ -746,13 +746,13 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findHorizontalLines(const cv::Ma
     /// Expand the lines
     if ((min_angle < 15) && (counter_horizontal != 0)) {
         for (int i = index_paral - counter_horizontal + 1; i <= index_paral; i++) {
-            cv::Vec4i v = lines[angle[0][i]];
-            lines[i][0] = 0;
-            lines[i][1] = ((float)v[1] - v[3]) / (v[0] - v[2]) * -v[0] + v[1];
-            lines[i][2] = image.cols;
-            lines[i][3] = ((float)v[1] - v[3]) / (v[0] - v[2]) * (image.cols - v[2]) + v[3];
-            cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
-            cv::line(drawing, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), color, 2, CV_AA);
+            //cv::Vec4i v = lines[angle[0][i]];
+            //lines[i][0] = 0;
+            //lines[i][1] = ((float)v[1] - v[3]) / (v[0] - v[2]) * -v[0] + v[1];
+            //lines[i][2] = image.cols;
+            //lines[i][3] = ((float)v[1] - v[3]) / (v[0] - v[2]) * (image.cols - v[2]) + v[3];
+            //cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
+            //cv::line(drawing, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), color, 2, CV_AA);
 
             /// Store horizontal lines
             horizontal_lines[cntr] = lines[angle[0][i]];
@@ -775,14 +775,12 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findHorizontalLines(const cv::Ma
     cv::imshow("All lines after FastLineDetector (only good one)", drawing_fix);
     */
 
-    cv::namedWindow("Expanded horizontal lines");
-    if (!drawing.empty()) cv::imshow("Expanded horizontal lines", drawing);
+    //cv::namedWindow("Expanded horizontal lines");
+    //if (!drawing.empty()) cv::imshow("Expanded horizontal lines", drawing);
     return horizontal_lines;
 }
 
 std::vector<cv::Vec4f> MatDetectorBottomCamera::findVerticalLines(const cv::Mat& image, std::vector<std::vector<float>>& angle, std::vector<cv::Vec4f>& lines) {
-
-    //float a = getLineSlope(lines[i]);
 
     float max_angle = 0;
     int counter_vertical = 0;
@@ -809,7 +807,7 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findVerticalLines(const cv::Mat&
         }
     }
 
-    std::cout<<counter_vertical<<"; "<<index_paral<<" - Number of parallel vertical lines + index"<<std::endl;std::cout<<counter_vertical<<"; "<<index_paral<<" - Number of parallel vertical lines + index"<<std::endl;
+    //std::cout<<counter_vertical<<"; "<<index_paral<<" - Number of parallel vertical lines + index"<<std::endl;std::cout<<counter_vertical<<"; "<<index_paral<<" - Number of parallel vertical lines + index"<<std::endl;
 
     int cntr = 0;
 
@@ -818,13 +816,13 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findVerticalLines(const cv::Mat&
     /// Expand the lines
     if ((max_angle > 80) && (counter_vertical != 0)) {
         for (int i = index_paral; i <= index_paral + counter_vertical - 1; i++) {
-            cv::Vec4i v = lines[angle[0][i]];
-            lines[i][0] = 0;
-            lines[i][1] = ((float)v[1] - v[3]) / (v[0] - v[2]) * -v[0] + v[1];
-            lines[i][2] = image.cols;
-            lines[i][3] = ((float)v[1] - v[3]) / (v[0] - v[2]) * (image.cols - v[2]) + v[3];
-            cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
-            cv::line(drawing, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), color, 2, CV_AA);
+            //cv::Vec4i v = lines[angle[0][i]];
+            //lines[i][0] = 0;
+            //lines[i][1] = ((float)v[1] - v[3]) / (v[0] - v[2]) * -v[0] + v[1];
+            //lines[i][2] = image.cols;
+            //lines[i][3] = ((float)v[1] - v[3]) / (v[0] - v[2]) * (image.cols - v[2]) + v[3];
+            //cv::Scalar color(rand() & 255, rand() & 255, rand() & 255);
+            //cv::line(drawing, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), color, 2, CV_AA);
 
             /// Store vertical lines
             vertical_lines[cntr] = lines[angle[0][i]];
@@ -832,13 +830,12 @@ std::vector<cv::Vec4f> MatDetectorBottomCamera::findVerticalLines(const cv::Mat&
         }
     }
 
-    cv::namedWindow("Expanded vertical lines");
-    if (!drawing.empty()) cv::imshow("Expanded vertical lines", drawing);
-
+    //cv::namedWindow("Expanded vertical lines");
+    //if (!drawing.empty()) cv::imshow("Expanded vertical lines", drawing);
     return vertical_lines;
 }
 
-void MatDetector::detectContours(const cv::Mat& src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours, bool withPreprocess) {
+void MatDetector::detectContours(const cv::Mat src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours, bool withPreprocess) {
 
     if (withPreprocess) {
         extractGreenColour(src, image);
@@ -852,17 +849,14 @@ void MatDetector::detectContours(const cv::Mat& src, cv::Mat& image, std::vector
     thresholdAndContours(src, image, contours);
 }
 
-MatDescriptorFrontCamera MatDetectorFrontCamera::detect(const cv::Mat &src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours) {
+MatDescriptorFrontCamera MatDetectorFrontCamera::detect(const cv::Mat src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours) {
 
-    //image = src;
     if (getMatContour(contours, image)) return MatDescriptorFrontCamera::create(contours);
     else return MatDescriptorFrontCamera::noMat();
-
 }
 
-MatDescriptorBottomCamera MatDetectorBottomCamera::detect(const cv::Mat &src, cv::Mat &image) {
+MatDescriptorBottomCamera MatDetectorBottomCamera::detect(const cv::Mat src, cv::Mat &image) {
 
-    //image = src;
     std::vector<cv::Vec4f> lines;
 
     detectLines(image, lines);
@@ -871,13 +865,13 @@ MatDescriptorBottomCamera MatDetectorBottomCamera::detect(const cv::Mat &src, cv
 
         std::vector<std::vector<float>> angle(4, std::vector<float>(lines.size())); /// Array for slopes
 
-        angle = drawAndsortLines(image, lines);
+        angle = drawAndSortLines(image, lines);
 
         std::vector<cv::Vec4f> horizontal_lines = findHorizontalLines(image, angle, lines);
         std::vector<cv::Vec4f> vertical_lines = findVerticalLines(image, angle, lines);
 
-        std::cout<<horizontal_lines.size()<<" - horizontal_lines"<<std::endl;
-        std::cout<<vertical_lines.size()<<" - vertical_lines"<<std::endl;
+        //std::cout<<horizontal_lines.size()<<" - Horizontal Lines"<<std::endl;
+        //std::cout<<vertical_lines.size()<<" - Vertical Lines"<<std::endl;
 
         if ((horizontal_lines.size() == 0) && (vertical_lines.size() == 0)) return MatDescriptorBottomCamera::noLines();
         else {

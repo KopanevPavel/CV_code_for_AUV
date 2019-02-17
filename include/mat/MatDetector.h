@@ -20,7 +20,7 @@ private:
 
 public:
 
-    void detectContours(const cv::Mat& src, cv::Mat& dst, std::vector<std::vector<cv::Point>>& contours, bool withPreprocess);
+    void detectContours(const cv::Mat src, cv::Mat& dst, std::vector<std::vector<cv::Point>>& contours, bool withPreprocess);
 
     MatDetector() = default;
     ~MatDetector() = default;
@@ -42,7 +42,7 @@ public:
     ~MatDetectorFrontCamera() = default;
     MatDetectorFrontCamera& operator=(const MatDetectorFrontCamera& other) = default;
 
-    MatDescriptorFrontCamera detect(const cv::Mat& src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours);
+    MatDescriptorFrontCamera detect(const cv::Mat src, cv::Mat& image, std::vector<std::vector<cv::Point>>& contours);
 
 };
 
@@ -53,7 +53,7 @@ class MatDetectorBottomCamera {
 private:
 
     void detectLines(const cv::Mat& image, std::vector<cv::Vec4f>& lines);
-    std::vector<std::vector<float>> drawAndsortLines (cv::Mat& image, std::vector<cv::Vec4f>& lines);
+    std::vector<std::vector<float>> drawAndSortLines(cv::Mat& image, std::vector<cv::Vec4f>& lines);
     float getLineSlope(const cv::Vec4f& line);
     std::vector<cv::Vec4f> findHorizontalLines(const cv::Mat& image, std::vector<std::vector<float>>& angle, std::vector<cv::Vec4f>& lines);
     std::vector<cv::Vec4f> findVerticalLines(const cv::Mat& image, std::vector<std::vector<float>>& angle, std::vector<cv::Vec4f>& lines);
@@ -66,7 +66,7 @@ public:
     ~MatDetectorBottomCamera() = default;
     MatDetectorBottomCamera& operator=(const MatDetectorBottomCamera& other) = default;
 
-    MatDescriptorBottomCamera detect(const cv::Mat& src, cv::Mat& image);
+    MatDescriptorBottomCamera detect(const cv::Mat src, cv::Mat& image);
 
 };
 
